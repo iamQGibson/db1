@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Player Stats</title>
+</head>
+<body>
+    <h2>CS2 STATS</h2>
+    <input type="text" id="playerName" placeholder="Enter Player Name">
+    <button onclick="fetchStats()">Search</button>
+    
+    <p id="result"></p>
+
+    <script>
+        async function fetchStats() {
+            let playerName = document.getElementById("playerName").value.trim();
+            if (!playerName) {
+                document.getElementById("result").innerText = "Enter a player name!";
+                return;
+            }
+
+            // Fetch database.html content
+            let response = await fetch("database.html");
+            let text = await response.text();
+
+            // Extract matchData from script tag
+            let matchData = {};
+            let matchDataStart = text.indexOf("let matchData =") + 15;
+            let matchDataEnd = text.indexOf("};", matchDataStart) + 1;
+            let jsonData = text.substring(matchDataStart, matchDataEnd);
+            
+            try {
+                eval("matchData = " + jsonData);
+            } catch (e) {
+                console.error("Error parsing matchData:", e);
+                return;
+            }
+
+            // Check if player exists
+            if (!(playerName in matchData)) {
+                document.getElementById("result").innerText = "Player not found.";
+                return;
+            }
+
+            // Get last 10 results
+            let last10 = matchData[playerName].slice(-10);
+            let formattedStats = last10.map(game => `${game.kills}(${game.headshots})`).join(", ");
+            
+            document.getElementById("result").innerText = `${playerName} / ${formattedStats}`;
+        }
+    </script>
+</body>
+</html>
